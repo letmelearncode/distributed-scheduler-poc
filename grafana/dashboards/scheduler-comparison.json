@@ -1,0 +1,163 @@
+{
+  "dashboard": {
+    "title": "Scheduler POC Comparison",
+    "tags": ["scheduler", "poc", "quartz", "db-scheduler"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Jobs Executed Total",
+        "type": "stat",
+        "targets": [
+          {"expr": "increase(quartz_jobs_executed_total[5m])", "legendFormat": "Quartz"},
+          {"expr": "increase(dbscheduler_jobs_executed_total[5m])", "legendFormat": "DB-Scheduler"}
+        ],
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 2,
+        "title": "Schedule Latency p99",
+        "type": "graph",
+        "targets": [
+          {"expr": "histogram_quantile(0.99, rate(quartz_schedule_latency_seconds_bucket[5m]))", "legendFormat": "Quartz p99"},
+          {"expr": "histogram_quantile(0.99, rate(dbscheduler_schedule_latency_seconds_bucket[5m]))", "legendFormat": "DB-Scheduler p99"}
+        ],
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+      },
+      {
+        "id": 3,
+        "title": "Execution Time p99",
+        "type": "graph",
+        "targets": [
+          {"expr": "histogram_quantile(0.99, rate(quartz_execution_time_seconds_bucket[5m]))", "legendFormat": "Quartz p99"},
+          {"expr": "histogram_quantile(0.99, rate(dbscheduler_execution_time_seconds_bucket[5m]))", "legendFormat": "DB-Scheduler p99"}
+        ],
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 4,
+        "title": "Active Jobs",
+        "type": "graph",
+        "targets": [
+          {"expr": "quartz_jobs_active", "legendFormat": "Quartz Active"},
+          {"expr": "dbscheduler_jobs_active", "legendFormat": "DB-Scheduler Active"}
+        ],
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+      },
+      {
+        "id": 5,
+        "title": "Jobs Failed Total",
+        "type": "stat",
+        "targets": [
+          {"expr": "increase(quartz_jobs_failed_total[5m])", "legendFormat": "Quartz"},
+          {"expr": "increase(dbscheduler_jobs_failed_total[5m])", "legendFormat": "DB-Scheduler"}
+        ],
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8}
+      },
+      {
+        "id": 6,
+        "title": "DB Connection Pool Usage",
+        "type": "graph",
+        "targets": [
+          {"expr": "hikaricp_connections_active{pool=\"quartz-pool\"}", "legendFormat": "Quartz Active Connections"},
+          {"expr": "hikaricp_connections_idle{pool=\"quartz-pool\"}", "legendFormat": "Quartz Idle Connections"},
+          {"expr": "hikaricp_connections_active{pool=\"db-scheduler-pool\"}", "legendFormat": "DB-Scheduler Active Connections"},
+          {"expr": "hikaricp_connections_idle{pool=\"db-scheduler-pool\"}", "legendFormat": "DB-Scheduler Idle Connections"}
+        ],
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8}
+      },
+      {
+        "id": 7,
+        "title": "JVM Heap Memory",
+        "type": "graph",
+        "targets": [
+          {"expr": "jvm_memory_used_bytes{area=\"heap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Heap Used"},
+          {"expr": "jvm_memory_max_bytes{area=\"heap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Heap Max"},
+          {"expr": "jvm_memory_used_bytes{area=\"heap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Heap Used"},
+          {"expr": "jvm_memory_max_bytes{area=\"heap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Heap Max"}
+        ],
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8}
+      },
+      {
+        "id": 8,
+        "title": "JVM Non-Heap Memory",
+        "type": "graph",
+        "targets": [
+          {"expr": "jvm_memory_used_bytes{area=\"nonheap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Non-Heap Used"},
+          {"expr": "jvm_memory_used_bytes{area=\"nonheap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Non-Heap Used"}
+        ],
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8}
+      },
+      {
+        "id": 9,
+        "title": "GC Pause Time",
+        "type": "graph",
+        "targets": [
+          {"expr": "rate(jvm_gc_pause_seconds_sum{application=\"quartz-scheduler\"}[5m])", "legendFormat": "Quartz GC Pause"},
+          {"expr": "rate(jvm_gc_pause_seconds_sum{application=\"db-scheduler\"}[5m])", "legendFormat": "DB-Scheduler GC Pause"}
+        ],
+        "gridPos": {"x": 0, "y": 32, "w": 12, "h": 8}
+      },
+      {
+        "id": 10,
+        "title": "Thread Count",
+        "type": "graph",
+        "targets": [
+          {"expr": "jvm_threads_live{application=\"quartz-scheduler\"}", "legendFormat": "Quartz Live Threads"},
+          {"expr": "jvm_threads_daemon{application=\"quartz-scheduler\"}", "legendFormat": "Quartz Daemon Threads"},
+          {"expr": "jvm_threads_live{application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Live Threads"},
+          {"expr": "jvm_threads_daemon{application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Daemon Threads"}
+        ],
+        "gridPos": {"x": 12, "y": 32, "w": 12, "h": 8}
+      },
+      {
+        "id": 11,
+        "title": "Kafka Producer Metrics",
+        "type": "graph",
+        "targets": [
+          {"expr": "rate(kafka_producer_record_send_total[5m])", "legendFormat": "Records Sent/sec"},
+          {"expr": "rate(kafka_producer_record_error_total[5m])", "legendFormat": "Record Errors/sec"},
+          {"expr": "kafka_producer_request_latency_avg", "legendFormat": "Avg Request Latency"}
+        ],
+        "gridPos": {"x": 0, "y": 40, "w": 12, "h": 8}
+      },
+      {
+        "id": 12,
+        "title": "Kafka Consumer Metrics",
+        "type": "graph",
+        "targets": [
+          {"expr": "rate(kafka_consumer_fetch_total[5m])", "legendFormat": "Fetches/sec"},
+          {"expr": "rate(kafka_consumer_records_consumed_total[5m])", "legendFormat": "Records Consumed/sec"},
+          {"expr": "kafka_consumer_fetch_latency_avg", "legendFormat": "Avg Fetch Latency"}
+        ],
+        "gridPos": {"x": 12, "y": 40, "w": 12, "h": 8}
+      },
+      {
+        "id": 13,
+        "title": "Kafka Topic Partitions",
+        "type": "graph",
+        "targets": [
+          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-input\"}", "legendFormat": "Input Topic Msgs/sec"},
+          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-output\"}", "legendFormat": "Output Topic Msgs/sec"},
+          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-dlq\"}", "legendFormat": "DLQ Topic Msgs/sec"}
+        ],
+        "gridPos": {"x": 0, "y": 48, "w": 24, "h": 8}
+      },
+      {
+        "id": 14,
+        "title": "Schedule Latency Distribution",
+        "type": "heatmap",
+        "targets": [
+          {"expr": "rate(quartz_schedule_latency_seconds_bucket[5m])", "legendFormat": "Quartz", "format": "heatmap"},
+          {"expr": "rate(dbscheduler_schedule_latency_seconds_bucket[5m])", "legendFormat": "DB-Scheduler", "format": "heatmap"}
+        ],
+        "gridPos": {"x": 0, "y": 56, "w": 24, "h": 8}
+      }
+    ],
+    "time": {
+      "from": "now-30m",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}

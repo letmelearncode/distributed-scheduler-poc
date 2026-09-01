@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'quartz-scheduler'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8081']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|process_.*|system_.*|hikaricp_.*|quartz_.*'
+        action: keep
+
+  - job_name: 'db-scheduler'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8082']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'jvm_.*|process_.*|system_.*|hikaricp_.*|dbscheduler_.*'
+        action: keep
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
