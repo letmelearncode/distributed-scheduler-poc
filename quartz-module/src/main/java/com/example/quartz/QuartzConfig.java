@@ -36,6 +36,9 @@ public class QuartzConfig {
     @Value("${spring.datasource.hikari.maximum-pool-size:50}")
     private int maxPoolSize;
 
+    @Value("${quartz.thread-count:50}")
+    private int threadCount;
+
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -66,7 +69,7 @@ public class QuartzConfig {
         props.setProperty("org.quartz.scheduler.instanceName", "QuartzPOCScheduler");
         props.setProperty("org.quartz.scheduler.instanceId", "AUTO");
         props.setProperty("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-        props.setProperty("org.quartz.threadPool.threadCount", "100");
+        props.setProperty("org.quartz.threadPool.threadCount", String.valueOf(threadCount));
         props.setProperty("org.quartz.threadPool.threadPriority", "5");
         props.setProperty("org.quartz.jobStore.class", JobStoreTX.class.getName());
         props.setProperty("org.quartz.jobStore.driverDelegateClass", PostgreSQLDelegate.class.getName());
