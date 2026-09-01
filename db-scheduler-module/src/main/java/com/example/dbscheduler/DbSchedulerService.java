@@ -36,6 +36,7 @@ public class DbSchedulerService {
                 .collect(Collectors.toList());
 
         scheduler.scheduleBatch(schedulableInstances);
+        DbSchedulerJob.incrementScheduled(payloads.size());
 
         log.info("Scheduled {} jobs in {}ms", payloads.size(), System.currentTimeMillis() - startTime);
     }

@@ -1,25 +1,26 @@
 global:
-  scrape_interval: 10s
+  scrape_interval: 5s
   evaluation_interval: 10s
 
 scrape_configs:
-  - job_name: 'quartz-scheduler'
-    metrics_path: '/actuator/prometheus'
+  # (A) The benchmark app itself. It runs on the host (not in a container), so we reach it
+  # via host.docker.internal. /all-metrics merges actuator (JVM/Hikari/process) with the
+  # quartz.* and dbscheduler.* scheduler metrics. Requires the app to be running
+  # (start it with --benchmark.keep-alive=true to keep it scrapeable after the run).
+  - job_name: 'scheduler-benchmark'
+    metrics_path: '/all-metrics'
     static_configs:
-      - targets: ['host.docker.internal:8081']
-    metric_relabel_configs:
-      - source_labels: [__name__]
-        regex: 'jvm_.*|process_.*|system_.*|hikaricp_.*|quartz_.*'
-        action: keep
+      # node1 (primary: schedules + executes) and node2 (worker: executes only).
+      - targets: ['host.docker.internal:8080', 'host.docker.internal:8081']
 
-  - job_name: 'db-scheduler'
-    metrics_path: '/actuator/prometheus'
+  # (B) Kafka broker metrics via kafka-exporter (topic offsets, consumer-group lag).
+  - job_name: 'kafka'
     static_configs:
-      - targets: ['host.docker.internal:8082']
-    metric_relabel_configs:
-      - source_labels: [__name__]
-        regex: 'jvm_.*|process_.*|system_.*|hikaricp_.*|dbscheduler_.*'
-        action: keep
+      - targets: ['kafka-exporter:9308']
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
 
   - job_name: 'prometheus'
     static_configs:

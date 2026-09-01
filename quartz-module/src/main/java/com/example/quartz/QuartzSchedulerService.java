@@ -69,6 +69,7 @@ public class QuartzSchedulerService {
                     .build();
 
             scheduler.scheduleJob(job, trigger);
+            QuartzMetrics.incrementScheduled();
         }
     }
 

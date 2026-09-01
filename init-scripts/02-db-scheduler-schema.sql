@@ -25,6 +25,24 @@ CREATE INDEX idx_scheduled_tasks_execution_time ON scheduled_tasks (execution_ti
 CREATE INDEX idx_scheduled_tasks_last_heartbeat ON scheduled_tasks (last_heartbeat);
 CREATE INDEX idx_scheduled_tasks_priority_execution ON scheduled_tasks (priority DESC, execution_time ASC);
 
+-- Aggressive "queue table" autovacuum tuning. scheduled_tasks is extremely high
+-- churn (insert-on-schedule, update-on-pick, delete-on-complete): at ~1.4M jobs/day
+-- the default autovacuum (fires at 20% dead tuples, throttled) lets dead tuples and
+-- bloat accumulate, which slows the FOR-UPDATE-SKIP-LOCKED pick and the delete. These
+-- settings vacuum whenever dead tuples exceed a small fixed threshold, at full speed.
+--   scale_factor = 0 + threshold = N  -> trigger on absolute dead-tuple count, not %
+--   cost_delay   = 0                  -> do not throttle the autovacuum worker
+-- fillfactor 80 leaves room for HOT updates (picked/version/heartbeat) to avoid index churn.
+ALTER TABLE scheduled_tasks SET (
+  autovacuum_vacuum_scale_factor  = 0.0,
+  autovacuum_vacuum_threshold     = 5000,
+  autovacuum_vacuum_cost_delay    = 0,
+  autovacuum_vacuum_cost_limit    = 10000,
+  autovacuum_analyze_scale_factor = 0.0,
+  autovacuum_analyze_threshold    = 5000,
+  fillfactor                      = 80
+);
+
 -- ---------------------------------------------------------------------------------------------
 -- The tables below are illustrative extras for the POC's "200k jobs / retention" discussion.
 -- They are NOT used by db-scheduler at runtime (db-scheduler only touches `scheduled_tasks`

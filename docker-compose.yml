@@ -74,6 +74,47 @@ services:
     ports:
       - "2181:2181"
 
+  # (B) Kafka -> Prometheus exporter: topic/partition offsets and consumer-group lag.
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:latest
+    container_name: scheduler-poc-kafka-exporter
+    command: ["--kafka.server=kafka:29092"]
+    ports:
+      - "9308:9308"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # (C) Kafka UI: browse topics, messages, and consumer lag at http://localhost:8085
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: scheduler-poc-kafka-ui
+    ports:
+      - "8085:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: scheduler-poc
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # Postgres -> Prometheus exporter: connections, dead tuples/vacuum, table size,
+  # plus custom scheduler queries (spike backlog, in-flight, longest txn).
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: scheduler-poc-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@postgres:5432/scheduler_poc?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/etc/pgexporter/queries.yaml"
+    volumes:
+      - ./pg-exporter-queries.yaml:/etc/pgexporter/queries.yaml:ro
+    ports:
+      - "9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   prometheus:
     image: prom/prometheus:v2.53.0
     container_name: scheduler-poc-prometheus

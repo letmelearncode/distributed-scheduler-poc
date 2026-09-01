@@ -77,7 +77,14 @@ public class QuartzConfig {
         props.setProperty("org.quartz.jobStore.tablePrefix", "QRTZ_");
         props.setProperty("org.quartz.jobStore.isClustered", "true");
         props.setProperty("org.quartz.jobStore.clusterCheckinInterval", "5000");
-        props.setProperty("org.quartz.jobStore.misfireThreshold", "60000");
+        // Spike tuning. A LARGE misfire threshold is the key: with the default 60s, a 200k
+        // same-instant backlog that takes longer than 60s to start draining is treated as
+        // "misfired" and routed through the slow MisfireHandler (20 at a time), collapsing to
+        // ~7 jobs/sec. With a 1h threshold the backlog stays on the normal fast acquisition
+        // path (batches of 1000 via the worker pool) instead.
+        props.setProperty("org.quartz.jobStore.misfireThreshold", "3600000");
+        props.setProperty("org.quartz.scheduler.batchTriggerAcquisitionMaxCount", "1000");
+        props.setProperty("org.quartz.jobStore.maxMisfiresToHandleAtATime", "2000");
         props.setProperty("org.quartz.jobStore.selectWithLockSQL", "SELECT * FROM {0}LOCKS WHERE LOCK_NAME = ? FOR UPDATE");
         props.setProperty("org.quartz.dataSource.quartzDS.provider", "hikaricp");
         props.setProperty("org.quartz.dataSource.quartzDS.driver", "org.postgresql.Driver");

@@ -1,163 +1,266 @@
 {
-  "dashboard": {
-    "title": "Scheduler POC Comparison",
-    "tags": ["scheduler", "poc", "quartz", "db-scheduler"],
-    "timezone": "browser",
-    "panels": [
-      {
-        "id": 1,
-        "title": "Jobs Executed Total",
-        "type": "stat",
-        "targets": [
-          {"expr": "increase(quartz_jobs_executed_total[5m])", "legendFormat": "Quartz"},
-          {"expr": "increase(dbscheduler_jobs_executed_total[5m])", "legendFormat": "DB-Scheduler"}
-        ],
-        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
-      },
-      {
-        "id": 2,
-        "title": "Schedule Latency p99",
-        "type": "graph",
-        "targets": [
-          {"expr": "histogram_quantile(0.99, rate(quartz_schedule_latency_seconds_bucket[5m]))", "legendFormat": "Quartz p99"},
-          {"expr": "histogram_quantile(0.99, rate(dbscheduler_schedule_latency_seconds_bucket[5m]))", "legendFormat": "DB-Scheduler p99"}
-        ],
-        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
-      },
-      {
-        "id": 3,
-        "title": "Execution Time p99",
-        "type": "graph",
-        "targets": [
-          {"expr": "histogram_quantile(0.99, rate(quartz_execution_time_seconds_bucket[5m]))", "legendFormat": "Quartz p99"},
-          {"expr": "histogram_quantile(0.99, rate(dbscheduler_execution_time_seconds_bucket[5m]))", "legendFormat": "DB-Scheduler p99"}
-        ],
-        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
-      },
-      {
-        "id": 4,
-        "title": "Active Jobs",
-        "type": "graph",
-        "targets": [
-          {"expr": "quartz_jobs_active", "legendFormat": "Quartz Active"},
-          {"expr": "dbscheduler_jobs_active", "legendFormat": "DB-Scheduler Active"}
-        ],
-        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
-      },
-      {
-        "id": 5,
-        "title": "Jobs Failed Total",
-        "type": "stat",
-        "targets": [
-          {"expr": "increase(quartz_jobs_failed_total[5m])", "legendFormat": "Quartz"},
-          {"expr": "increase(dbscheduler_jobs_failed_total[5m])", "legendFormat": "DB-Scheduler"}
-        ],
-        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8}
-      },
-      {
-        "id": 6,
-        "title": "DB Connection Pool Usage",
-        "type": "graph",
-        "targets": [
-          {"expr": "hikaricp_connections_active{pool=\"quartz-pool\"}", "legendFormat": "Quartz Active Connections"},
-          {"expr": "hikaricp_connections_idle{pool=\"quartz-pool\"}", "legendFormat": "Quartz Idle Connections"},
-          {"expr": "hikaricp_connections_active{pool=\"db-scheduler-pool\"}", "legendFormat": "DB-Scheduler Active Connections"},
-          {"expr": "hikaricp_connections_idle{pool=\"db-scheduler-pool\"}", "legendFormat": "DB-Scheduler Idle Connections"}
-        ],
-        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8}
-      },
-      {
-        "id": 7,
-        "title": "JVM Heap Memory",
-        "type": "graph",
-        "targets": [
-          {"expr": "jvm_memory_used_bytes{area=\"heap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Heap Used"},
-          {"expr": "jvm_memory_max_bytes{area=\"heap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Heap Max"},
-          {"expr": "jvm_memory_used_bytes{area=\"heap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Heap Used"},
-          {"expr": "jvm_memory_max_bytes{area=\"heap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Heap Max"}
-        ],
-        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8}
-      },
-      {
-        "id": 8,
-        "title": "JVM Non-Heap Memory",
-        "type": "graph",
-        "targets": [
-          {"expr": "jvm_memory_used_bytes{area=\"nonheap\",application=\"quartz-scheduler\"}", "legendFormat": "Quartz Non-Heap Used"},
-          {"expr": "jvm_memory_used_bytes{area=\"nonheap\",application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Non-Heap Used"}
-        ],
-        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8}
-      },
-      {
-        "id": 9,
-        "title": "GC Pause Time",
-        "type": "graph",
-        "targets": [
-          {"expr": "rate(jvm_gc_pause_seconds_sum{application=\"quartz-scheduler\"}[5m])", "legendFormat": "Quartz GC Pause"},
-          {"expr": "rate(jvm_gc_pause_seconds_sum{application=\"db-scheduler\"}[5m])", "legendFormat": "DB-Scheduler GC Pause"}
-        ],
-        "gridPos": {"x": 0, "y": 32, "w": 12, "h": 8}
-      },
-      {
-        "id": 10,
-        "title": "Thread Count",
-        "type": "graph",
-        "targets": [
-          {"expr": "jvm_threads_live{application=\"quartz-scheduler\"}", "legendFormat": "Quartz Live Threads"},
-          {"expr": "jvm_threads_daemon{application=\"quartz-scheduler\"}", "legendFormat": "Quartz Daemon Threads"},
-          {"expr": "jvm_threads_live{application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Live Threads"},
-          {"expr": "jvm_threads_daemon{application=\"db-scheduler\"}", "legendFormat": "DB-Scheduler Daemon Threads"}
-        ],
-        "gridPos": {"x": 12, "y": 32, "w": 12, "h": 8}
-      },
-      {
-        "id": 11,
-        "title": "Kafka Producer Metrics",
-        "type": "graph",
-        "targets": [
-          {"expr": "rate(kafka_producer_record_send_total[5m])", "legendFormat": "Records Sent/sec"},
-          {"expr": "rate(kafka_producer_record_error_total[5m])", "legendFormat": "Record Errors/sec"},
-          {"expr": "kafka_producer_request_latency_avg", "legendFormat": "Avg Request Latency"}
-        ],
-        "gridPos": {"x": 0, "y": 40, "w": 12, "h": 8}
-      },
-      {
-        "id": 12,
-        "title": "Kafka Consumer Metrics",
-        "type": "graph",
-        "targets": [
-          {"expr": "rate(kafka_consumer_fetch_total[5m])", "legendFormat": "Fetches/sec"},
-          {"expr": "rate(kafka_consumer_records_consumed_total[5m])", "legendFormat": "Records Consumed/sec"},
-          {"expr": "kafka_consumer_fetch_latency_avg", "legendFormat": "Avg Fetch Latency"}
-        ],
-        "gridPos": {"x": 12, "y": 40, "w": 12, "h": 8}
-      },
-      {
-        "id": 13,
-        "title": "Kafka Topic Partitions",
-        "type": "graph",
-        "targets": [
-          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-input\"}", "legendFormat": "Input Topic Msgs/sec"},
-          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-output\"}", "legendFormat": "Output Topic Msgs/sec"},
-          {"expr": "kafka_server_BrokerTopicMetrics_MessagesInPerSec{topic=\"scheduled-jobs-dlq\"}", "legendFormat": "DLQ Topic Msgs/sec"}
-        ],
-        "gridPos": {"x": 0, "y": 48, "w": 24, "h": 8}
-      },
-      {
-        "id": 14,
-        "title": "Schedule Latency Distribution",
-        "type": "heatmap",
-        "targets": [
-          {"expr": "rate(quartz_schedule_latency_seconds_bucket[5m])", "legendFormat": "Quartz", "format": "heatmap"},
-          {"expr": "rate(dbscheduler_schedule_latency_seconds_bucket[5m])", "legendFormat": "DB-Scheduler", "format": "heatmap"}
-        ],
-        "gridPos": {"x": 0, "y": 56, "w": 24, "h": 8}
-      }
-    ],
-    "time": {
-      "from": "now-30m",
-      "to": "now"
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "5s",
+  "timezone": "browser",
+  "title": "Scheduler POC",
+  "uid": "scheduler-poc",
+  "schemaVersion": 39,
+  "tags": ["scheduler", "quartz", "db-scheduler"],
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "row", "title": "Scheduling (enqueue) throughput",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 100
     },
-    "refresh": "10s"
-  }
+    {
+      "id": 1, "type": "timeseries", "title": "Scheduling rate (jobs/sec)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "How fast each library enqueues jobs. db-scheduler uses a bulk batch insert; Quartz inserts per job.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["mean", "max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(quartz_jobs_scheduled_total[$__rate_interval])", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_scheduled_total[$__rate_interval])", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "id": 2, "type": "timeseries", "title": "Cumulative jobs scheduled",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_scheduled_total", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_scheduled_total", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "type": "row", "title": "Firing / execution throughput",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 }, "id": 101
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "Fire rate (jobs executed/sec)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Rate at which due jobs actually fire and complete. This is the spike-drain throughput.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["mean", "max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(quartz_jobs_executed_total[$__rate_interval])", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_executed_total[$__rate_interval])", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "id": 4, "type": "timeseries", "title": "Cumulative jobs executed",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_executed_total", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_executed_total", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "type": "row", "title": "Latency & in-flight",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }, "id": 102
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Active (in-flight) jobs",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_active", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_active", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Execution time p99 (ms)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(quartz_execution_time_seconds_bucket[$__rate_interval])) by (le)) * 1000", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_execution_time_seconds_bucket[$__rate_interval])) by (le)) * 1000", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Fire latency p99 (scheduled -> start, s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "How late jobs fire vs their target time. Under a spike this is the backlog-queueing delay.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 5, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(quartz_schedule_latency_seconds_bucket[$__rate_interval])) by (le))", "legendFormat": "Quartz" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_schedule_latency_seconds_bucket[$__rate_interval])) by (le))", "legendFormat": "DB-Scheduler {{instance}}" }
+      ]
+    },
+    {
+      "type": "row", "title": "Resources & Kafka",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 }, "id": 103
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Hikari active DB connections",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 28 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections_active", "legendFormat": "active {{pool}}" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "hikaricp_connections", "legendFormat": "total {{pool}}" }
+      ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "JVM heap used",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 28 },
+      "fieldConfig": { "defaults": { "unit": "decbytes", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})", "legendFormat": "heap used" }
+      ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Kafka: result-message produce rate (msg/sec)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Rate of new messages per topic, from kafka-exporter offsets. output = job results, dlq = failures.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 28 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(kafka_topic_partition_current_offset{topic=~\"scheduled-jobs-.*\"}[$__rate_interval])) by (topic)", "legendFormat": "{{topic}}" }
+      ]
+    },
+    {
+      "type": "row", "title": "Kafka (broker via kafka-exporter)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "id": 104
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Cumulative messages by topic",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total messages produced per topic (current offset). output should reach the job count; dlq counts failures.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=~\"scheduled-jobs-.*\"}) by (topic)", "legendFormat": "{{topic}}" }
+      ]
+    },
+    {
+      "id": 12, "type": "stat", "title": "Results on output topic",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 12, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=\"scheduled-jobs-output\"})", "legendFormat": "output" }
+      ]
+    },
+    {
+      "id": 13, "type": "stat", "title": "DLQ (failed results)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 16, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=\"scheduled-jobs-dlq\"}) or vector(0)", "legendFormat": "dlq" }
+      ]
+    },
+    {
+      "id": 14, "type": "stat", "title": "Cluster",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 20, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "kafka_brokers", "legendFormat": "brokers" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_under_replicated_partition)", "legendFormat": "under-replicated" }
+      ]
+    },
+    {
+      "type": "row", "title": "PostgreSQL (via postgres-exporter) - the scaling bottleneck",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 }, "id": 105
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "DB connections vs max",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total/active/lock-waiting connections against server max_connections. The hard horizontal-scaling limit.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 8, "lineWidth": 2 } }, "overrides": [ { "matcher": { "id": "byName", "options": "max_connections" }, "properties": [ { "id": "custom.lineStyle", "value": { "fill": "dash" } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] } ] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_total", "legendFormat": "total" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_active", "legendFormat": "active" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_waiting_on_lock", "legendFormat": "waiting on lock" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_max_connections", "legendFormat": "max_connections" }
+      ]
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "Spike backlog (due, unpicked) & in-flight",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "How the same-instant backlog clears. backlog_due = due but not yet picked; in_flight = picked/executing.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_backlog_due", "legendFormat": "backlog due" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_in_flight", "legendFormat": "in-flight (picked)" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_total", "legendFormat": "total remaining" }
+      ]
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "Tuple churn (rows/sec)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Insert/delete rate on the database. scheduled_tasks is insert-on-schedule, delete-on-complete, so this tracks job flow and vacuum load.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(pg_stat_database_tup_inserted{datname=\"scheduler_poc\"}[$__rate_interval])", "legendFormat": "inserted/sec" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(pg_stat_database_tup_deleted{datname=\"scheduler_poc\"}[$__rate_interval])", "legendFormat": "deleted/sec" }
+      ]
+    },
+    {
+      "id": 18, "type": "timeseries", "title": "scheduled_tasks dead vs live tuples",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Dead tuples accumulate from delete-on-complete. If autovacuum can't keep up at 1.4M/day, the table bloats and pick/delete slow down.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_dead_tuples", "legendFormat": "dead tuples" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_live_tuples", "legendFormat": "live tuples" }
+      ]
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "scheduled_tasks size (table+indexes)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "decbytes", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_total_bytes", "legendFormat": "scheduled_tasks bytes" }
+      ]
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "Longest transaction (s) & deadlocks",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "A climbing longest-transaction or any deadlocks signals lock contention (e.g. the same-scheduler-name stall).",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 8, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_longest_txn_seconds", "legendFormat": "longest txn (s)" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "pg_stat_database_deadlocks{datname=\"scheduler_poc\"}", "legendFormat": "deadlocks (total)" }
+      ]
+    }
+  ]
 }
