@@ -184,6 +184,83 @@
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "kafka_brokers", "legendFormat": "brokers" },
         { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_under_replicated_partition)", "legendFormat": "under-replicated" }
       ]
+    },
+    {
+      "type": "row", "title": "PostgreSQL (via postgres-exporter) - the scaling bottleneck",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 45 }, "id": 105
+    },
+    {
+      "id": 15, "type": "timeseries", "title": "DB connections vs max",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total/active/lock-waiting connections against server max_connections. The hard horizontal-scaling limit.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 8, "lineWidth": 2 } }, "overrides": [ { "matcher": { "id": "byName", "options": "max_connections" }, "properties": [ { "id": "custom.lineStyle", "value": { "fill": "dash" } }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] } ] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_total", "legendFormat": "total" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_active", "legendFormat": "active" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_waiting_on_lock", "legendFormat": "waiting on lock" },
+        { "refId": "D", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_max_connections", "legendFormat": "max_connections" }
+      ]
+    },
+    {
+      "id": 16, "type": "timeseries", "title": "Spike backlog (due, unpicked) & in-flight",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "How the same-instant backlog clears. backlog_due = due but not yet picked; in_flight = picked/executing.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_backlog_due", "legendFormat": "backlog due" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_in_flight", "legendFormat": "in-flight (picked)" },
+        { "refId": "C", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_tasks_total", "legendFormat": "total remaining" }
+      ]
+    },
+    {
+      "id": 17, "type": "timeseries", "title": "Tuple churn (rows/sec)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Insert/delete rate on the database. scheduled_tasks is insert-on-schedule, delete-on-complete, so this tracks job flow and vacuum load.",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 46 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(pg_stat_database_tup_inserted{datname=\"scheduler_poc\"}[$__rate_interval])", "legendFormat": "inserted/sec" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(pg_stat_database_tup_deleted{datname=\"scheduler_poc\"}[$__rate_interval])", "legendFormat": "deleted/sec" }
+      ]
+    },
+    {
+      "id": 18, "type": "timeseries", "title": "scheduled_tasks dead vs live tuples",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Dead tuples accumulate from delete-on-complete. If autovacuum can't keep up at 1.4M/day, the table bloats and pick/delete slow down.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_dead_tuples", "legendFormat": "dead tuples" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_live_tuples", "legendFormat": "live tuples" }
+      ]
+    },
+    {
+      "id": 19, "type": "timeseries", "title": "scheduled_tasks size (table+indexes)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "decbytes", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_table_total_bytes", "legendFormat": "scheduled_tasks bytes" }
+      ]
+    },
+    {
+      "id": 20, "type": "timeseries", "title": "Longest transaction (s) & deadlocks",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "A climbing longest-transaction or any deadlocks signals lock contention (e.g. the same-scheduler-name stall).",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 54 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 8, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "scheduler_conn_longest_txn_seconds", "legendFormat": "longest txn (s)" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "pg_stat_database_deadlocks{datname=\"scheduler_poc\"}", "legendFormat": "deadlocks (total)" }
+      ]
     }
   ]
 }

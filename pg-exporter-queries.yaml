@@ -1,0 +1,45 @@
+# Custom postgres-exporter queries targeting the scheduler workload.
+# Metric names are "<key>_<column>", e.g. scheduler_tasks_backlog_due.
+
+scheduler_tasks:
+  query: >
+    SELECT
+      count(*) AS total,
+      count(*) FILTER (WHERE execution_time <= now() AND NOT picked) AS backlog_due,
+      count(*) FILTER (WHERE picked) AS in_flight
+    FROM scheduled_tasks
+  master: true
+  metrics:
+    - total:       { usage: "GAUGE", description: "Total rows in scheduled_tasks" }
+    - backlog_due: { usage: "GAUGE", description: "Due but not yet picked (spike backlog)" }
+    - in_flight:   { usage: "GAUGE", description: "Currently picked / in-flight" }
+
+scheduler_table:
+  query: >
+    SELECT
+      n_live_tup AS live_tuples,
+      n_dead_tup AS dead_tuples,
+      pg_total_relation_size('scheduled_tasks') AS total_bytes
+    FROM pg_stat_user_tables WHERE relname = 'scheduled_tasks'
+  master: true
+  metrics:
+    - live_tuples:  { usage: "GAUGE", description: "Live tuples in scheduled_tasks" }
+    - dead_tuples:  { usage: "GAUGE", description: "Dead tuples (autovacuum pressure)" }
+    - total_bytes:  { usage: "GAUGE", description: "Table + index size in bytes" }
+
+scheduler_conn:
+  query: >
+    SELECT
+      count(*) AS total,
+      count(*) FILTER (WHERE state = 'active') AS active,
+      count(*) FILTER (WHERE wait_event_type = 'Lock') AS waiting_on_lock,
+      (SELECT setting::int FROM pg_settings WHERE name = 'max_connections') AS max_connections,
+      COALESCE(EXTRACT(EPOCH FROM max(now() - xact_start) FILTER (WHERE state <> 'idle')), 0) AS longest_txn_seconds
+    FROM pg_stat_activity WHERE datname = 'scheduler_poc'
+  master: true
+  metrics:
+    - total:               { usage: "GAUGE", description: "Connections to scheduler_poc" }
+    - active:              { usage: "GAUGE", description: "Active connections" }
+    - waiting_on_lock:     { usage: "GAUGE", description: "Connections waiting on a lock" }
+    - max_connections:     { usage: "GAUGE", description: "Server max_connections" }
+    - longest_txn_seconds: { usage: "GAUGE", description: "Age of oldest non-idle transaction (s)" }

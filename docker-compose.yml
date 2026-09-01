@@ -99,6 +99,22 @@ services:
       kafka:
         condition: service_healthy
 
+  # Postgres -> Prometheus exporter: connections, dead tuples/vacuum, table size,
+  # plus custom scheduler queries (spike backlog, in-flight, longest txn).
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: scheduler-poc-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@postgres:5432/scheduler_poc?sslmode=disable"
+      PG_EXPORTER_EXTEND_QUERY_PATH: "/etc/pgexporter/queries.yaml"
+    volumes:
+      - ./pg-exporter-queries.yaml:/etc/pgexporter/queries.yaml:ro
+    ports:
+      - "9187:9187"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   prometheus:
     image: prom/prometheus:v2.53.0
     container_name: scheduler-poc-prometheus
