@@ -17,12 +17,15 @@ public class QuartzMetrics implements MeterBinder {
 
     private static final Timer scheduleLatencyTimer = Timer.builder("quartz.schedule.latency")
             .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentileHistogram() // emit _bucket series for Grafana histogram_quantile()
             .register(registry);
 
     private static final Timer executionTimer = Timer.builder("quartz.execution.time")
             .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentileHistogram()
             .register(registry);
 
+    private static final Counter scheduledCounter = Counter.builder("quartz.jobs.scheduled.total").register(registry);
     private static final Counter executedCounter = Counter.builder("quartz.jobs.executed.total").register(registry);
     private static final Counter failedCounter = Counter.builder("quartz.jobs.failed.total").register(registry);
     private static final Gauge activeJobsGauge = Gauge.builder("quartz.jobs.active", QuartzMetrics::getActiveJobCount).register(registry);
@@ -35,6 +38,14 @@ public class QuartzMetrics implements MeterBinder {
 
     public static void recordExecutionTime(long timeMs) {
         executionTimer.record(timeMs, TimeUnit.MILLISECONDS);
+    }
+
+    public static void incrementScheduled() {
+        scheduledCounter.increment();
+    }
+
+    public static void incrementScheduled(long n) {
+        scheduledCounter.increment(n);
     }
 
     public static void incrementExecuted() {

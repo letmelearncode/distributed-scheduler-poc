@@ -62,6 +62,14 @@ public class BenchmarkApplication implements CommandLineRunner {
     @Value("${benchmark.mode:benchmark}")
     private String benchmarkMode;
 
+    @Value("${benchmark.keep-alive:false}")
+    private boolean keepAlive;
+
+    // Seconds from now until the common fire timestamp. For large runs set this above the
+    // expected load time so all jobs fire as a clean simultaneous spike (no misfire handling).
+    @Value("${benchmark.fire-delay-seconds:30}")
+    private int fireDelaySeconds;
+
     @Value("${kafka.topics.input:scheduled-jobs-input}")
     private String inputTopic;
 
@@ -132,12 +140,19 @@ public class BenchmarkApplication implements CommandLineRunner {
         }
 
         printComparisonReport();
-        System.exit(0);
+
+        if (keepAlive) {
+            log.info("benchmark.keep-alive=true -> staying up so Prometheus can scrape "
+                    + "http://localhost:{}/all-metrics . Press Ctrl+C to exit.", 8080);
+            new CountDownLatch(1).await(); // block forever until the process is killed
+        } else {
+            System.exit(0);
+        }
     }
 
     private long calculateNextMidnight() {
-        // Schedule for 5 seconds from now for immediate execution in benchmarks
-        return Instant.now().plusSeconds(5).toEpochMilli();
+        // Common fire timestamp for the spike, `fireDelaySeconds` from now.
+        return Instant.now().plusSeconds(fireDelaySeconds).toEpochMilli();
     }
 
     private List<com.example.quartz.JobPayload> generateQuartzPayloads(int count) {
@@ -170,13 +185,17 @@ public class BenchmarkApplication implements CommandLineRunner {
 
     private void runQuartzBenchmark(List<com.example.quartz.JobPayload> payloads, long scheduledTimestamp) throws Exception {
         log.info("=== Starting Quartz Benchmark ===");
-        quartzSchedulerService.start();
 
+        // Load all triggers with the scheduler in STANDBY (not started yet). This keeps the
+        // bulk insert from fighting the worker/misfire threads over the global cluster lock.
+        // The scheduler is then started to fire the whole batch as a single spike.
         long scheduleStart = System.currentTimeMillis();
         quartzSchedulerService.scheduleJobs(payloads, scheduledTimestamp);
         long scheduleTime = System.currentTimeMillis() - scheduleStart;
+        log.info("Quartz scheduling (standby load) completed in {}ms", scheduleTime);
 
-        log.info("Quartz scheduling completed in {}ms", scheduleTime);
+        quartzSchedulerService.start();
+        log.info("Quartz scheduler started - firing spike");
 
         waitForCompletion("Quartz", payloads.size(), QuartzMetrics::getCompletedCount);
 
@@ -391,11 +410,6 @@ public class BenchmarkApplication implements CommandLineRunner {
         System.out.println("Scheduler(s) tested: " + schedulerType);
         System.out.println("Mode: " + benchmarkMode);
         System.out.println("=".repeat(60));
-    }
-
-    @Bean
-    public MeterRegistry meterRegistry() {
-        return new PrometheusMeterRegistry(io.micrometer.prometheus.PrometheusConfig.DEFAULT);
     }
 
     // Resource Monitoring

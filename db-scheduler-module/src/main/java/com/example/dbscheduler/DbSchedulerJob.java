@@ -22,12 +22,15 @@ public class DbSchedulerJob {
 
     private static final Timer scheduleLatencyTimer = Timer.builder("dbscheduler.schedule.latency")
             .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentileHistogram() // emit _bucket series for Grafana histogram_quantile()
             .register(registry);
 
     private static final Timer executionTimer = Timer.builder("dbscheduler.execution.time")
             .publishPercentiles(0.5, 0.95, 0.99)
+            .publishPercentileHistogram()
             .register(registry);
 
+    private static final Counter scheduledCounter = Counter.builder("dbscheduler.jobs.scheduled.total").register(registry);
     private static final Counter executedCounter = Counter.builder("dbscheduler.jobs.executed.total").register(registry);
     private static final Counter failedCounter = Counter.builder("dbscheduler.jobs.failed.total").register(registry);
     private static final Gauge activeJobsGauge = Gauge.builder("dbscheduler.jobs.active", DbSchedulerJob::getActiveJobCount).register(registry);
@@ -79,6 +82,10 @@ public class DbSchedulerJob {
 
     private static int getActiveJobCount() {
         return activeJobCount;
+    }
+
+    public static void incrementScheduled(long n) {
+        scheduledCounter.increment(n);
     }
 
     public static long getExecutedCount() {
