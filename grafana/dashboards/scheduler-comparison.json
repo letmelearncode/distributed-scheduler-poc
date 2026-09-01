@@ -24,7 +24,7 @@
       "options": { "legend": { "displayMode": "table", "calcs": ["mean", "max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(quartz_jobs_scheduled_total[$__rate_interval])", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_scheduled_total[$__rate_interval])", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_scheduled_total[$__rate_interval])", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -35,7 +35,7 @@
       "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_scheduled_total", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_scheduled_total", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_scheduled_total", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -51,7 +51,7 @@
       "options": { "legend": { "displayMode": "table", "calcs": ["mean", "max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(quartz_jobs_executed_total[$__rate_interval])", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_executed_total[$__rate_interval])", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "rate(dbscheduler_jobs_executed_total[$__rate_interval])", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -62,7 +62,7 @@
       "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_executed_total", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_executed_total", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_executed_total", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -77,7 +77,7 @@
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "quartz_jobs_active", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_active", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "dbscheduler_jobs_active", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -88,7 +88,7 @@
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(quartz_execution_time_seconds_bucket[$__rate_interval])) by (le)) * 1000", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_execution_time_seconds_bucket[$__rate_interval])) by (le)) * 1000", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_execution_time_seconds_bucket[$__rate_interval])) by (le)) * 1000", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -100,7 +100,7 @@
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
         { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(quartz_schedule_latency_seconds_bucket[$__rate_interval])) by (le))", "legendFormat": "Quartz" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_schedule_latency_seconds_bucket[$__rate_interval])) by (le))", "legendFormat": "DB-Scheduler" }
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "histogram_quantile(0.99, sum(rate(dbscheduler_schedule_latency_seconds_bucket[$__rate_interval])) by (le))", "legendFormat": "DB-Scheduler {{instance}}" }
       ]
     },
     {
@@ -129,15 +129,60 @@
       ]
     },
     {
-      "id": 10, "type": "timeseries", "title": "Kafka: results produced & consumer lag",
+      "id": 10, "type": "timeseries", "title": "Kafka: result-message produce rate (msg/sec)",
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "description": "From kafka-exporter. Produce rate = growth of the output topic offsets; lag = pending records for the consumer group.",
+      "description": "Rate of new messages per topic, from kafka-exporter offsets. output = job results, dlq = failures.",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 28 },
       "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
       "targets": [
-        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(kafka_topic_partition_current_offset{topic=\"scheduled-jobs-output\"}[$__rate_interval]))", "legendFormat": "output produce/sec" },
-        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_consumergroup_lag{consumergroup=\"scheduler-poc\"})", "legendFormat": "consumer lag" }
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(kafka_topic_partition_current_offset{topic=~\"scheduled-jobs-.*\"}[$__rate_interval])) by (topic)", "legendFormat": "{{topic}}" }
+      ]
+    },
+    {
+      "type": "row", "title": "Kafka (broker via kafka-exporter)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "id": 104
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "Cumulative messages by topic",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Total messages produced per topic (current offset). output should reach the job count; dlq counts failures.",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "calcs": ["max"], "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=~\"scheduled-jobs-.*\"}) by (topic)", "legendFormat": "{{topic}}" }
+      ]
+    },
+    {
+      "id": 12, "type": "stat", "title": "Results on output topic",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 12, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "area" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=\"scheduled-jobs-output\"})", "legendFormat": "output" }
+      ]
+    },
+    {
+      "id": 13, "type": "stat", "title": "DLQ (failed results)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 16, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_current_offset{topic=\"scheduled-jobs-dlq\"}) or vector(0)", "legendFormat": "dlq" }
+      ]
+    },
+    {
+      "id": 14, "type": "stat", "title": "Cluster",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 4, "x": 20, "y": 37 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none", "textMode": "value_and_name" },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "kafka_brokers", "legendFormat": "brokers" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(kafka_topic_partition_under_replicated_partition)", "legendFormat": "under-replicated" }
       ]
     }
   ]

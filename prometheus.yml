@@ -10,7 +10,8 @@ scrape_configs:
   - job_name: 'scheduler-benchmark'
     metrics_path: '/all-metrics'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      # node1 (primary: schedules + executes) and node2 (worker: executes only).
+      - targets: ['host.docker.internal:8080', 'host.docker.internal:8081']
 
   # (B) Kafka broker metrics via kafka-exporter (topic offsets, consumer-group lag).
   - job_name: 'kafka'
